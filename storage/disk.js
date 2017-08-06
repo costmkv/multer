@@ -16,6 +16,7 @@ function getDestination (req, file, cb) {
 
 function DiskStorage (opts) {
   this.getFilename = (opts.filename || getFilename)
+  this.useFileHash = opts.useFileHash
 
   if (typeof opts.destination === 'string') {
     mkdirp.sync(opts.destination)
@@ -37,9 +38,24 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
       var finalPath = path.join(destination, filename)
       var outStream = fs.createWriteStream(finalPath)
 
+      var hash = crypto.createHash('md5')
+      file.stream.on('data', function (chunk) {
+        hash.update(chunk)
+      })
+
       file.stream.pipe(outStream)
       outStream.on('error', cb)
       outStream.on('finish', function () {
+        if (that.useFileHash) {
+          var md5 = hash.digest('hex').toLowerCase()
+          var fileFormat = (file.originalname).split('.')
+          filename = md5 + '.' + fileFormat[fileFormat.length - 1]
+          var oldPath = finalPath
+          finalPath = path.join(destination, filename)
+
+          fs.renameSync(oldPath, finalPath)
+        }
+
         cb(null, {
           destination: destination,
           filename: filename,
