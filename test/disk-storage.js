@@ -48,6 +48,27 @@ describe('Disk Storage', function () {
     })
   })
 
+  it('should process parser/form-data POST request with useFileHash', function (done) {
+    var upload = multer({ dest: uploadDir, useFileHash: true })
+    var form = new FormData()
+    var parser = upload.single('small0')
+
+    form.append('name', 'Multer')
+    form.append('small0', util.file('small0.dat'))
+
+    util.submitForm(parser, form, function (err, req) {
+      assert.ifError(err)
+      assert.equal(req.body.name, 'Multer')
+      assert.equal(req.file.filename, '63a6e418c99a69ff206c672f41f4408f.dat')
+      assert.equal(req.file.fieldname, 'small0')
+      assert.equal(req.file.originalname, 'small0.dat')
+      assert.equal(req.file.size, 1778)
+      assert.equal(util.fileSize(req.file.path), 1778)
+
+      done()
+    })
+  })
+
   it('should process empty fields and an empty file', function (done) {
     var form = new FormData()
     var parser = upload.single('empty')

@@ -48,8 +48,7 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
       outStream.on('finish', function () {
         if (that.useFileHash) {
           var md5 = hash.digest('hex').toLowerCase()
-          var fileFormat = (file.originalname).split('.')
-          filename = md5 + '.' + fileFormat[fileFormat.length - 1]
+          filename = md5 + path.extname(file.originalname)
           var oldPath = finalPath
           finalPath = path.join(destination, filename)
 
